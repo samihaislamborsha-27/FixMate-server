@@ -1,10 +1,22 @@
-﻿const jwt = require("jsonwebtoken");
+﻿const AUTH_URL = process.env.BETTER_AUTH_URL || "http://localhost:3000";
 
-function verifyToken(req, res, next) {
+let jwksPromise;
+
+async function getJWKS() {
+  if (!jwksPromise) {
+    jwksPromise = import("jose").then(({ createRemoteJWKSet }) =>
+      createRemoteJWKSet(new URL("/api/auth/jwks", AUTH_URL))
+    );
+  }
+
+  return jwksPromise;
+}
+
+async function verifyToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
         message: "Authentication token is required."
@@ -12,12 +24,14 @@ function verifyToken(req, res, next) {
     }
 
     const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { jwtVerify } = await import("jose");
 
-    req.user = {
-      ...decoded,
-      id: decoded.id || decoded.userId || decoded.sub
-    };
+    const { payload } = await jwtVerify(token, await getJWKS(), {
+      issuer: AUTH_URL,
+      audience: AUTH_URL
+    });
+
+    req.user = { ...payload, id: payload.sub };
 
     if (!req.user.id) {
       return res.status(401).json({
@@ -28,6 +42,8 @@ function verifyToken(req, res, next) {
 
     next();
   } catch (error) {
+    console.error("JWT verification failed:", error.message);
+
     return res.status(401).json({
       success: false,
       message: "Invalid or expired authentication token."
