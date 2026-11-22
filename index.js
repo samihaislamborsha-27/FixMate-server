@@ -6,6 +6,7 @@ const { connectDB } = require("./config/db");
 
 const healthRoutes = require("./routes/healthRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 
@@ -29,6 +30,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/health", healthRoutes);
 app.use("/api/services", serviceRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

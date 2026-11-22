@@ -2,7 +2,7 @@
   if (req.user?.role !== "technician") {
     return res.status(403).json({
       success: false,
-      message: "Technician access required."
+      message: "Technician access required.",
     });
   }
   next();
