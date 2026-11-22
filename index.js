@@ -5,6 +5,7 @@ const cors = require("cors");
 const { connectDB } = require("./config/db");
 
 const healthRoutes = require("./routes/healthRoutes");
+const serviceRoutes = require("./routes/serviceRoutes");
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 
@@ -13,7 +14,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors({
   origin: process.env.CLIENT_URL || "http://localhost:3000",
-  credentials: true
+  credentials: true,
 }));
 
 app.use(express.json({ limit: "10mb" }));
@@ -22,11 +23,12 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "Welcome to FixMate API"
+    message: "Welcome to FixMate API",
   });
 });
 
 app.use("/api/health", healthRoutes);
+app.use("/api/services", serviceRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

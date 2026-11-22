@@ -16,29 +16,34 @@ async function verifyToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader?.startsWith("Bearer ")) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
-        message: "Authentication token is required."
+        message: "Authentication token is required.",
       });
     }
 
-    const token = authHeader.split(" ")[1];
+    const token = authHeader.slice(7);
     const { jwtVerify } = await import("jose");
 
     const { payload } = await jwtVerify(token, await getJWKS(), {
       issuer: AUTH_URL,
-      audience: AUTH_URL
+      audience: AUTH_URL,
     });
 
-    req.user = { ...payload, id: payload.sub };
-
-    if (!req.user.id) {
+    if (!payload.sub) {
       return res.status(401).json({
         success: false,
-        message: "Invalid authentication token."
+        message: "Invalid authentication token.",
       });
     }
+
+    req.user = {
+      id: payload.sub,
+      email: payload.email,
+      name: payload.name,
+      role: payload.role || "customer",
+    };
 
     next();
   } catch (error) {
@@ -46,7 +51,7 @@ async function verifyToken(req, res, next) {
 
     return res.status(401).json({
       success: false,
-      message: "Invalid or expired authentication token."
+      message: "Invalid or expired authentication token.",
     });
   }
 }
