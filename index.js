@@ -1,4 +1,4 @@
-﻿require("dotenv").config();
+require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
@@ -12,6 +12,12 @@ const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
+
+const paymentRoutes = require("./routes/paymentRoutes");
+const { stripeWebhook } = require("./controllers/paymentController");
+
+// Stripe webhook must receive the raw body before express.json().
+app.post("/api/payments/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
@@ -20,6 +26,7 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: "10mb" }));
+app.use("/api/payments", paymentRoutes);
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
