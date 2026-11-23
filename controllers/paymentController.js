@@ -1,4 +1,4 @@
-﻿const { ObjectId } = require("mongodb");
+const { ObjectId } = require("mongodb");
 const Stripe = require("stripe");
 const { getDB } = require("../config/db");
 
